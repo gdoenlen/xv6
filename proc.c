@@ -6,10 +6,13 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "pstat.h"
 
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  struct pstat pstat;
+  int totaltickets;
 } ptable;
 
 static struct proc *initproc;
@@ -73,46 +76,51 @@ myproc(void) {
 static struct proc*
 allocproc(void)
 {
+  int i;
   struct proc *p;
   char *sp;
 
   acquire(&ptable.lock);
 
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == UNUSED)
-      goto found;
+  for (i = 0; i < NPROC; i++) {
+    p = &ptable.proc[i];
+    if (p->state == UNUSED) {
+      p->state = EMBRYO;
+      p->pid = nextpid++;
+      ptable.pstat.inuse[i] = 1;
+      ptable.pstat.pid[i] = nextpid;
+      ptable.pstat.tickets[i] = TICKET_MIN;
+      ptable.pstat.ticks[i] = 0;
+      ptable.totaltickets++;
 
-  release(&ptable.lock);
-  return 0;
+      release(&ptable.lock);
 
-found:
-  p->state = EMBRYO;
-  p->pid = nextpid++;
+      // Allocate kernel stack.
+      if ((p->kstack = kalloc()) == 0) {
+        p->state = UNUSED;
+        return 0;
+      }
+      sp = p->kstack + KSTACKSIZE;
 
-  release(&ptable.lock);
+      // Leave room for trap frame.
+      sp -= sizeof *p->tf;
+      p->tf = (struct trapframe*)sp;
 
-  // Allocate kernel stack.
-  if((p->kstack = kalloc()) == 0){
-    p->state = UNUSED;
+      // Set up new context to start executing at forkret,
+      // which returns to trapret.
+      sp -= 4;
+      *(uint*)sp = (uint)trapret;
+
+      sp -= sizeof *p->context;
+      p->context = (struct context*)sp;
+      memset(p->context, 0, sizeof *p->context);
+      p->context->eip = (uint)forkret;
+
+      return p;
+    }
+    release(&ptable.lock);
     return 0;
   }
-  sp = p->kstack + KSTACKSIZE;
-
-  // Leave room for trap frame.
-  sp -= sizeof *p->tf;
-  p->tf = (struct trapframe*)sp;
-
-  // Set up new context to start executing at forkret,
-  // which returns to trapret.
-  sp -= 4;
-  *(uint*)sp = (uint)trapret;
-
-  sp -= sizeof *p->context;
-  p->context = (struct context*)sp;
-  memset(p->context, 0, sizeof *p->context);
-  p->context->eip = (uint)forkret;
-
-  return p;
 }
 
 //PAGEBREAK: 32
