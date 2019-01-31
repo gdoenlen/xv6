@@ -89,3 +89,18 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// return a copy of ptable.pstat
+int
+sys_getpinfo(void)
+{
+  return -1;
+}
+
+// sets the number of tickets held by 
+// the process with the given pid
+int 
+sys_settickets(void)
+{
+  return -1;
+}
