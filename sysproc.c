@@ -94,6 +94,12 @@ sys_uptime(void)
 int
 sys_getpinfo(void)
 {
+  int pid = myproc()->pid;
+  struct pstat* ps;
+
+  if (argptr(0, (void*) &ps, sizeof(ps)) < 0) {
+    return -1;
+  }
   return -1;
 }
 
@@ -102,5 +108,12 @@ sys_getpinfo(void)
 int 
 sys_settickets(void)
 {
-  return -1;
+  int pid = myproc()->pid;
+  int tickets;
+
+  if (argint(0, &tickets) < 0) {
+    return -1;
+  }
+
+  return settickets(pid, tickets);
 }

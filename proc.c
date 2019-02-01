@@ -540,3 +540,51 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+int
+settickets(int pid, int tickets)
+{
+  struct proc* p;
+  int i;
+
+  acquire(&ptable.lock);
+  for (i = 0; i < NPROC; i++) {
+    p = &ptable.proc[i];
+    if (p->pid == pid) {
+      break;
+    }
+  }
+
+  // this will happen if the pid given to us
+  // isn't found and the loop ends up going
+  // to the end of the list
+  if (p->pid != pid) {
+    release(&ptable.lock); 
+    return -1;
+  }
+
+  int tix = ptable.pstat.tickets[i];
+  ptable.totaltickets += (tickets - tix);
+  ptable.pstat.tickets[i] = tickets;
+
+  release(&ptable.lock); 
+  return 0;
+}
+
+// returns a defensive copy of the pstat table
+int
+getpinfo(struct pstat* ps) 
+{
+  int i;
+
+  acquire(&ptable.lock);
+  for (i = 0; i < NPROC; i++) {
+    ps->inuse[i] =  ptable.pstat.inuse[i];
+    ps->pid[i] = ptable.pstat.pid[i];
+    ps->tickets[i] = ptable.pstat.tickets[i];
+    ps->ticks[i] = ptable.pstat.ticks[i];
+  }
+  release(&ptable.lock);
+
+  return 0;
+}
