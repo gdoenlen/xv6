@@ -100,7 +100,7 @@ sys_getpinfo(void)
   if (argptr(0, (void*) &ps, sizeof(ps)) < 0) {
     return -1;
   }
-  return -1;
+  return getpinfo(ps);
 }
 
 // sets the number of tickets held by 
