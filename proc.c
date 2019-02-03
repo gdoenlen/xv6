@@ -119,8 +119,8 @@ allocproc(void)
       return p;
     }
     release(&ptable.lock);
-    return 0;
   }
+  return 0;
 }
 
 //PAGEBREAK: 32

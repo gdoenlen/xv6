@@ -94,7 +94,6 @@ sys_uptime(void)
 int
 sys_getpinfo(void)
 {
-  int pid = myproc()->pid;
   struct pstat* ps;
 
   if (argptr(0, (void*) &ps, sizeof(ps)) < 0) {
