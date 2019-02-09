@@ -87,8 +87,12 @@ allocproc(void)
     if (p->state == UNUSED) {
       p->state = EMBRYO;
       p->pid = nextpid++;
-      p->tickets = p->parent != 0 ? p->parent->tickets : 1;
-      ptable.totaltickets++;
+
+      if (_settickets(p, (p->parent != 0 ? p->parent->tickets : 1)) == 0) {
+        p->state = UNUSED;
+        release(&ptable.lock);
+        return 0;
+      }
 
       release(&ptable.lock);
 
@@ -550,4 +554,49 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+// sets the number of tickets on the given process
+// returns -1 if there are no more tickets
+// or the number of tickets set 
+int 
+settickets(struct proc* p, int tickets)
+{
+  acquire(&ptable.lock);
+  return _settickets(p, tickets);
+  release(&ptable.lock);
+}
+
+// sets the number of tickets on the given process
+// returns -1 if there are no more tickets
+// or the number of tickets set 
+// this should only be called when holding ptable.lock
+static int
+_settickets(struct proc* p, int tickets)
+{
+  int difference; 
+
+  if (tickets < 0) {
+    // processes can't have negative tickets
+    return -1;
+  } else if (ptable.totaltickets == INT_MAX && p->tickets < tickets) {
+    // trying to add tickets to a process when there are none left
+    return -1;
+  } else if (tickets < p->tickets) {
+    // reducing the amount of tickets a process has
+    difference = tickets - p->tickets;
+    p->tickets = tickets;
+  } else {
+    // adding tickets to a process
+    if (ptable.totaltickets > (INT_MAX - tickets)) {
+      // will wrap 32-bits
+      difference = INT_MAX - p->tickets;    
+      p->tickets += difference;
+    } else {
+      difference = tickets - p->tickets;
+      p->tickets = tickets;
+    }
+  }
+  ptable.totaltickets += difference;
+  return p->tickets;
 }

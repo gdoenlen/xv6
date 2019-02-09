@@ -52,6 +52,8 @@ struct proc {
   uint tickets;                // Number of tickets this process holds
 };
 
+#define INT_MAX 0x7FFFFFFF
+
 // Process memory is laid out contiguously, low addresses first:
 //   text
 //   original data and bss

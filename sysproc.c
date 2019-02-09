@@ -101,7 +101,5 @@ sys_settickets(void)
   if (argint(0, &tickets) < 0) {
     return -1;
   }
-  cp->tickets = tickets;
-
-  return 0;
+  return settickets(cp, tickets); 
 }
