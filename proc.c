@@ -272,6 +272,7 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  ptable.totaltickets -= curproc->tickets;
   sched();
   panic("zombie exit");
 }
