@@ -1,5 +1,3 @@
-#include "pstat.h"
-
 struct stat;
 struct rtcdate;
 
@@ -25,7 +23,6 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int getpinfo(struct pstat*);
 int settickets(int);
 
 // ulib.c

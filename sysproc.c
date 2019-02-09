@@ -90,29 +90,18 @@ sys_uptime(void)
   return xticks;
 }
 
-// return a copy of ptable.pstat
-int
-sys_getpinfo(void)
-{
-  struct pstat* ps;
-
-  if (argptr(0, (void*) &ps, sizeof(ps)) < 0) {
-    return -1;
-  }
-  return getpinfo(ps);
-}
-
 // sets the number of tickets held by 
 // the process with the given pid
 int 
 sys_settickets(void)
 {
-  int pid = myproc()->pid;
+  struct proc *cp = myproc();
   int tickets;
 
   if (argint(0, &tickets) < 0) {
     return -1;
   }
+  cp->tickets = tickets;
 
-  return settickets(pid, tickets);
+  return 0;
 }

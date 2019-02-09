@@ -6,13 +6,11 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
-#include "pstat.h"
 #include "mt19937ar.h"
 
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
-  struct pstat pstat;
   int totaltickets;
 } ptable;
 
@@ -89,10 +87,7 @@ allocproc(void)
     if (p->state == UNUSED) {
       p->state = EMBRYO;
       p->pid = nextpid++;
-      ptable.pstat.inuse[i] = 1;
-      ptable.pstat.pid[i] = nextpid;
-      ptable.pstat.tickets[i] = TICKET_MIN;
-      ptable.pstat.ticks[i] = 0;
+      p->tickets = p->parent != 0 ? p->parent->tickets : 1;
       ptable.totaltickets++;
 
       release(&ptable.lock);
@@ -357,7 +352,7 @@ scheduler(void)
       if(p->state != RUNNABLE)
         continue;
 
-      tixpassed += ptable.pstat.tickets[i];
+      tixpassed += p->tickets;
       
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -555,63 +550,4 @@ procdump(void)
     }
     cprintf("\n");
   }
-}
-
-int
-settickets(int pid, int tickets)
-{
-  struct proc* p;
-  int i;
-
-  if (tickets < 0) {
-    return -1;
-  }
-
-  acquire(&ptable.lock);
-
-  // prevents tickets from wrapping.
-  if (ptable.totaltickets > ((int) 0x7FFFFFFF - tickets)) {
-    release(&ptable.lock);
-    return -1; 
-  }
-
-  for (i = 0; i < NPROC; i++) {
-    p = &ptable.proc[i];
-    if (p->pid == pid) {
-      break;
-    }
-  }
-
-  // this will happen if the pid given to us
-  // isn't found and the loop ends up going
-  // to the end of the list
-  if (p->pid != pid) {
-    release(&ptable.lock); 
-    return -1;
-  }
-
-  int tix = ptable.pstat.tickets[i];
-  ptable.totaltickets += (tickets - tix);
-  ptable.pstat.tickets[i] = tickets;
-
-  release(&ptable.lock); 
-  return 0;
-}
-
-// returns a defensive copy of the pstat table
-int
-getpinfo(struct pstat* ps) 
-{
-  int i;
-
-  acquire(&ptable.lock);
-  for (i = 0; i < NPROC; i++) {
-    ps->inuse[i] =  ptable.pstat.inuse[i];
-    ps->pid[i] = ptable.pstat.pid[i];
-    ps->tickets[i] = ptable.pstat.tickets[i];
-    ps->ticks[i] = ptable.pstat.ticks[i];
-  }
-  release(&ptable.lock);
-
-  return 0;
 }
