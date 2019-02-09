@@ -91,7 +91,7 @@ sys_uptime(void)
 }
 
 // sets the number of tickets held by 
-// the process with the given pid
+// the current process
 int 
 sys_settickets(void)
 {
