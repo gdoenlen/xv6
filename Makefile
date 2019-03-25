@@ -145,6 +145,8 @@ vectors.S: vectors.pl
 
 ULIB = ulib.o usys.o printf.o umalloc.o
 
+# user programs have their first page unusable
+# their text section should start at 0x1000
 _%: %.o $(ULIB)
 	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $@ $^
 	$(OBJDUMP) -S $@ > $*.asm
@@ -175,6 +177,7 @@ UPROGS=\
 	_ln\
 	_ls\
 	_mkdir\
+	_np\
 	_rm\
 	_sh\
 	_stressfs\
