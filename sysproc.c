@@ -89,3 +89,55 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// creates a new kernel thread
+// that shares the calling processes'
+// address space
+int sys_clone(void)
+{
+  void (*fn)(void*, void*);
+  void* arg1;
+  void* arg2;
+  void* stack;
+  int i, pid;
+  struct proc* np;
+  struct proc* curproc;
+
+  if (argptr(0, &fn, sizeof(fn)) < 0) {
+    return -1;
+  }
+
+  if (argptr(1, &arg1, sizeof(arg1)) < 0) {
+    return -1;
+  }
+
+  if (argptr(2, &arg2, sizeof(arg2)) < 0) {
+    return -1;
+  }
+
+  if (argptr(3, &stack, sizeof(stack)) < 0) {
+    return -1;
+  }
+
+  // not page aligned or larger than 1 page
+  if ((uint) stack % PGSIZE != 0 || sizeof(*stack) > PGSIZE) {
+    return -1;
+  }
+
+  // failed to allocate a new process
+  if ((np = allocproc()) == 0) {
+    return -1;
+  }
+
+  // setup/copy the process state
+  np->sz = curproc->sz;
+  np->pgdir = curproc->pgdir;
+  np->parent = curproc->parent;
+  np->tf = curproc->tf;
+  np->tf->eax = 0;
+  np->tf->eip = fn;
+  np->cwd = idup(curproc->cwd);
+  np->kstack = stack;
+
+
+}
