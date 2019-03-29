@@ -129,15 +129,6 @@ int sys_clone(void)
     return -1;
   }
 
-  // setup/copy the process state
-  np->sz = curproc->sz;
-  np->pgdir = curproc->pgdir;
-  np->parent = curproc->parent;
-  np->tf = curproc->tf;
-  np->tf->eax = 0;
-  np->tf->eip = fn;
-  np->cwd = idup(curproc->cwd);
-  np->kstack = stack;
-
-
+  return clone(fn, arg1, arg2, stack);
 }
+

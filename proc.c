@@ -532,3 +532,30 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
+{
+
+  int i, pid;
+  struct proc* np;
+  struct proc* curproc = myproc();
+  char* ustack[3];
+
+  // setup the stack for the process
+
+
+  // setup/copy the process state
+  np->sz = curproc->sz;
+  np->pgdir = curproc->pgdir;
+  np->parent = curproc->parent;
+  *np->tf = *curproc->tf;
+  np->tf->eax = 0;
+  np->tf->eip = (uint) fn;
+  np->cwd = idup(curproc->cwd);
+  
+  acquire(&ptable.lock);  
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+
+  return 0;
+}
