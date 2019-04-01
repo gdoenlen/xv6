@@ -539,10 +539,12 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   int i, pid;
   struct proc* np;
   struct proc* curproc = myproc();
-  char* ustack[3];
+  uint* ustack = ((uint *) stack); 
 
   // setup the stack for the process
-
+  ustack[0] = 0xFFFFFFFF;
+  ustack[1] = arg1;
+  ustack[2] = arg2;
 
   // setup/copy the process state
   np->sz = curproc->sz;
@@ -551,6 +553,8 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   *np->tf = *curproc->tf;
   np->tf->eax = 0;
   np->tf->eip = (uint) fn;
+  np->tf->ebp = (uint) stack;
+  np->tf->esp = ((uint) stack + (2 * sizeof(uint)));
   np->cwd = idup(curproc->cwd);
   
   acquire(&ptable.lock);  
