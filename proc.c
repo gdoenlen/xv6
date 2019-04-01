@@ -533,6 +533,9 @@ procdump(void)
   }
 }
 
+// creates a kernel thread from the current process
+// and sets up the new threads stack to be the stack
+// provided
 int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
 {
 
@@ -554,7 +557,7 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   np->tf->eax = 0;
   np->tf->eip = (uint) fn;
   np->tf->ebp = (uint) stack;
-  np->tf->esp = ((uint) stack + (2 * sizeof(uint)));
+  np->tf->esp = ((uint) stack - (2 * sizeof(uint)));
   np->cwd = idup(curproc->cwd);
   
   acquire(&ptable.lock);  
