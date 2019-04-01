@@ -565,10 +565,12 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
     }
   }
   np->cwd = idup(curproc->cwd);
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+  pid = np->pid;
   
   acquire(&ptable.lock);  
   np->state = RUNNABLE;
   release(&ptable.lock);
 
-  return 0;
+  return pid;
 }
