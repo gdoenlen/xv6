@@ -542,12 +542,21 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   int i, pid;
   struct proc* np;
   struct proc* curproc = myproc();
-  uint* ustack = ((uint *) stack); 
+  uint* top;
 
-  // setup the stack for the process
-  ustack[0] = 0xFFFFFFFF;
-  ustack[1] = arg1;
-  ustack[2] = arg2;
+  if ((np == allocproc()) == 0) {
+    return -1;
+  }
+
+  // setup the stack for the process using x86 CDECL
+  // The args will be pushed by the caller process
+  // right to left (arg2 then arg1) starting at the top
+  // of the user space stack then the return address 
+  // will be pushed by the processor
+  top = stack + PGSIZE - sizeof(uint);
+  *top = arg2;
+  *(top - sizeof(uint)) = arg1;
+  *(top - (sizeof(uint) * 2)) = 0xFFFFFFFF;
 
   // setup/copy the process state
   np->sz = curproc->sz;
@@ -556,14 +565,17 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   *np->tf = *curproc->tf;
   np->tf->eax = 0;
   np->tf->eip = (uint) fn;
-  np->tf->ebp = (uint) stack;
-  np->tf->esp = ((uint) stack - (2 * sizeof(uint)));
+  np->tf->ebp = stack + PGSIZE;
+  np->tf->esp = stack + PGSIZE - (3 * sizeof(uint));
 
+  // copy the open file descriptors from the parent
+  // so that they remain open after the parent finishes
   for (i = 0; i < NOFILE; i++) {
     if (curproc->ofile[i]) {
       np->ofile[i] = filedup(curproc->ofile[i]);
     }
   }
+
   np->cwd = idup(curproc->cwd);
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
   pid = np->pid;
