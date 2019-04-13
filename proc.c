@@ -544,7 +544,7 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   struct proc* curproc = myproc();
   uint* top;
 
-  if ((np == allocproc()) == 0) {
+  if ((np = allocproc()) == 0) {
     return -1;
   }
 
@@ -554,8 +554,8 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   // of the user space stack then the return address 
   // will be pushed by the processor
   top = stack + PGSIZE - sizeof(uint);
-  *top = arg2;
-  *(top - sizeof(uint)) = arg1;
+  *top = (uint) arg2;
+  *(top - sizeof(uint)) = (uint) arg1;
   *(top - (sizeof(uint) * 2)) = 0xFFFFFFFF;
 
   // setup/copy the process state
@@ -565,8 +565,8 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   *np->tf = *curproc->tf;
   np->tf->eax = 0;
   np->tf->eip = (uint) fn;
-  np->tf->ebp = stack + PGSIZE;
-  np->tf->esp = stack + PGSIZE - (3 * sizeof(uint));
+  np->tf->ebp = (uint) stack + PGSIZE;
+  np->tf->esp = (uint) stack + PGSIZE - (3 * sizeof(uint));
 
   // copy the open file descriptors from the parent
   // so that they remain open after the parent finishes

@@ -99,9 +99,6 @@ int sys_clone(void)
   void* arg1;
   void* arg2;
   void* stack;
-  int i, pid;
-  struct proc* np;
-  struct proc* curproc;
 
   if (argptr(0, &fn, sizeof(fn)) < 0) {
     return -1;
@@ -121,11 +118,6 @@ int sys_clone(void)
 
   // not page aligned or larger than 1 page
   if ((uint) stack % PGSIZE != 0 || sizeof(*stack) > PGSIZE) {
-    return -1;
-  }
-
-  // failed to allocate a new process
-  if ((np = allocproc()) == 0) {
     return -1;
   }
 
