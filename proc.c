@@ -559,6 +559,7 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   *(top - (sizeof(uint) * 2)) = 0xFFFFFFFF;
 
   // setup/copy the process state
+  np->tstack = stack;
   np->sz = curproc->sz;
   np->pgdir = curproc->pgdir;
   np->parent = curproc->parent;
@@ -585,4 +586,39 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   release(&ptable.lock);
 
   return pid;
+}
+
+int join(void** stack) {
+  int pid, haveKids;
+  struct proc* p;
+  struct proc* curproc = myproc();
+
+  acquire(&ptable.lock);
+  for (;;) {
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (p->parent == curproc && p->tstack != 0) {
+        haveKids = 1;
+        if (p->state == ZOMBIE) {
+          pid = p->pid;
+          kfree(p->kstack);
+          freevm(p->pgdir);
+          p->pid = 0;
+          p->parent = 0;
+          p->name[0] = 0;
+          p->killed = 0;
+          p->state = UNUSED;
+          *stack = p->tstack;
+          release(&ptable.lock);
+          return pid;
+        }
+      }
+    }
+
+    if (!haveKids || curproc->killed) {
+      release(&ptable.lock);
+      return -1;
+    }
+
+    sleep(curproc, &ptable.lock);
+  }
 }
