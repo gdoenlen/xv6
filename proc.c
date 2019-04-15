@@ -592,6 +592,10 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
 // the current process back to the parent.
 // The currentproc will sleep until it has
 // a child that is complete. 
+// The call will also store the user land thread
+// stack in the pointer provided. So the userland
+// routine can free the memory used. 
+//
 // returns the PID of the process joined
 // or -1 if there are no children.
 int join(void** stack) {
