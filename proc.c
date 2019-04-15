@@ -611,7 +611,6 @@ int join(void** stack) {
         if (p->state == ZOMBIE) {
           pid = p->pid;
           kfree(p->kstack);
-          freevm(p->pgdir);
           p->pid = 0;
           p->parent = 0;
           p->name[0] = 0;
