@@ -588,6 +588,12 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   return pid;
 }
 
+// Joins the first child thread found of
+// the current process back to the parent.
+// The currentproc will sleep until it has
+// a child that is complete. 
+// returns the PID of the process joined
+// or -1 if there are no children.
 int join(void** stack) {
   int pid, haveKids;
   struct proc* p;
