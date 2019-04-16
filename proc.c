@@ -598,7 +598,8 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
 //
 // returns the PID of the process joined
 // or -1 if there are no children.
-int join(void** stack) {
+int join(void** stack)
+{
   int pid, haveKids;
   struct proc* p;
   struct proc* curproc = myproc();
