@@ -562,7 +562,7 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   np->tstack = stack;
   np->sz = curproc->sz;
   np->pgdir = curproc->pgdir;
-  np->parent = curproc->parent;
+  np->parent = curproc;
   *np->tf = *curproc->tf;
   np->tf->eax = 0;
   np->tf->eip = (uint) fn;
