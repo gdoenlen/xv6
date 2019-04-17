@@ -104,3 +104,25 @@ memmove(void *vdst, const void *vsrc, int n)
     *dst++ = *src++;
   return vdst;
 }
+
+// creates a new kernel thread that starts executing
+// the given function with the given arguments.
+int thread_create(void (*fn)(void*, void*), void* arg1, void* arg2)
+{
+    void* stack = malloc(4096);
+    return clone(fn, arg1, arg2, stack);
+}
+
+// Joins the first child thread
+// returns the pid of the thread joined
+// or -1 if there are no child threads
+int thread_join()
+{
+    void* stack;
+    int ret = join(&stack);
+    if (ret > -1) {
+        free(stack);
+    }
+
+    return ret;
+}
