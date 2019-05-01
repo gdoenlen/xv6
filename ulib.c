@@ -127,7 +127,7 @@ int thread_join()
     return ret;
 }
 
-static inline atomic_fetch_add(int* addr, int amount)
+static inline int atomic_fetch_add(int* addr, int amount)
 {
   __asm__ volatile(
       "lock; xaddl %0, %1"
@@ -154,5 +154,5 @@ void ticket_lock_acquire(struct ticket_lock* lock)
 
 void ticket_lock_release(struct ticket_lock* lock)
 {
-  lock->turn = lock->turn++;
+  lock->turn++;
 }
