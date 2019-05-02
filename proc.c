@@ -569,7 +569,7 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   np->tf->eax = 0;
   np->tf->eip = (uint) fn;
   np->tf->ebp = (uint) top;
-  np->tf->esp = (uint) stack + PGSIZE - (3 * sizeof(uint));
+  np->tf->esp = (uint) ret;
 
   // copy the open file descriptors from the parent
   // so that they remain open after the parent finishes
