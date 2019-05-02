@@ -542,7 +542,7 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   int i, pid;
   struct proc* np;
   struct proc* curproc = myproc();
-  uint* top;
+  char* top, *a1, *ret;
 
   if ((np = allocproc()) == 0) {
     return -1;
@@ -554,9 +554,11 @@ int clone(void (*fn)(void*, void*), void* arg1, void* arg2, void* stack)
   // of the user space stack then the return address 
   // will be pushed by the processor
   top = stack + PGSIZE - sizeof(uint);
-  *top = (uint) arg2;
-  *(top - sizeof(uint)) = (uint) arg1;
-  *(top - (sizeof(uint) * 2)) = 0xFFFFFFFF;
+  a1 = top - sizeof(uint);
+  ret = a1 - sizeof(uint);
+  *(uint*) top = (uint) arg2;
+  *(uint*) a1 = (uint) arg1;
+  *(uint*) ret = (uint) 0xFFFFFFFF;
 
   // setup/copy the process state
   np->tstack = stack;
