@@ -8,7 +8,7 @@ main(int argc, char** argv)
     
     #pragma GCC diagnostic ignored "-Wuninitialized"
     *np = 'c';
-    printf(1, np, "%s\n");
+    printf(1, "%s\n", *np);
     exit();
 }
 
