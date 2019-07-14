@@ -221,6 +221,9 @@ CPUS := 2
 endif
 
 QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA)
+
+# In WSL any form of make-qemu will fail due to not
+# having a display. 
 ifeq ($(shell uname -r | cut -d '-' -f 3), Microsoft)
 QEMUOPTS += -display none
 endif
