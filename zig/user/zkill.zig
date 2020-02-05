@@ -16,9 +16,10 @@ export fn main(argc: c_int, argv: [*c][*c]u8) void {
 
     var i: usize = 1;
     while (i < argc) {
-        var result = kill(atoi(argv[i]));
-        if (result > 0) {
-            printf(2, "failed to kill pid: %d", result);
+        const pid = atoi(argv[i]);
+        const result = kill(pid);
+        if (result < 0) {
+            printf(2, "failed to kill pid: %d\n", pid);
         }
         i += 1;
     }
