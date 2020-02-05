@@ -32,7 +32,7 @@ OBJS = \
 # TOOLPREFIX = i386-jos-elf
 
 # Using native tools (e.g., on X86 Linux)
-#TOOLPREFIX = 
+#TOOLPREFIX =
 
 # Try to infer the correct TOOLPREFIX if not set
 ifndef TOOLPREFIX
@@ -81,6 +81,7 @@ CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 &
 ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
+ZIGFLAGS = -target i386-freestanding-elfv1 -fno-PIC -I .
 
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
 ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
@@ -150,6 +151,12 @@ _%: %.o $(ULIB)
 	$(OBJDUMP) -S $@ > $*.asm
 	$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
 
+z_%: $(ULIB)
+	zig build-obj zig/user/$*.zig $(ZIGFLAGS)
+	$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $* $*.o $^
+	$(OBJDUMP) -S $* > $*.asm
+	$(OBJDUMP) -t $* | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym
+
 _forktest: forktest.o $(ULIB)
 	# forktest has less library code linked in - needs to be small
 	# in order to be able to max out the proc table.
@@ -182,17 +189,26 @@ UPROGS=\
 	_wc\
 	_zombie\
 
-fs.img: mkfs README $(UPROGS)
-	./mkfs fs.img README $(UPROGS)
+ZUPROGS=\
+	z_zkill\
+	z_zworld\
+
+ZUBINS=\
+	zkill\
+	zworld\
+
+fs.img: mkfs README $(UPROGS) $(ZUPROGS)
+	./mkfs fs.img README $(UPROGS) $(ZUBINS)
 
 -include *.d
 
-clean: 
+clean:
 	rm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \
 	*.o *.d *.asm *.sym vectors.S bootblock entryother \
-	initcode initcode.out kernel xv6.img fs.img kernelmemfs \
+	initcode initcode.out kernel x2v6.img fs.img kernelmemfs \
 	xv6memfs.img mkfs .gdbinit \
-	$(UPROGS)
+	$(UPROGS) \
+	$(ZUBINS)
 
 # make a printout
 FILES = $(shell grep -v '^\#' runoff.list)
@@ -221,12 +237,6 @@ CPUS := 2
 endif
 
 QEMUOPTS = -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp $(CPUS) -m 512 $(QEMUEXTRA)
-
-# In WSL any form of make-qemu will fail due to not
-# having a display. 
-ifeq ($(shell uname -r | cut -d '-' -f 3), Microsoft)
-QEMUOPTS += -display none
-endif
 
 qemu: fs.img xv6.img
 	$(QEMU) -serial mon:stdio $(QEMUOPTS)
