@@ -192,10 +192,14 @@ UPROGS=\
 ZUPROGS=\
 	z_zkill\
 	z_zworld\
+	z_zzombie\
+	z_zcat\
 
 ZUBINS=\
 	zkill\
 	zworld\
+	zzombie\
+	zcat\
 
 fs.img: mkfs README $(UPROGS) $(ZUPROGS)
 	./mkfs fs.img README $(UPROGS) $(ZUBINS)
