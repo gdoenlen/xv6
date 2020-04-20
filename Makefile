@@ -81,7 +81,7 @@ CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 &
 ASFLAGS = -m32 -gdwarf-2 -Wa,-divide
 # FreeBSD ld wants ``elf_i386_fbsd''
 LDFLAGS += -m $(shell $(LD) -V | grep elf_i386 2>/dev/null | head -n 1)
-ZIGFLAGS = -target i386-freestanding-elfv1 -fno-PIC -I .
+ZIGFLAGS = -target i386-freestanding-gnu -fno-PIC -I .
 
 # Disable PIE when possible (for Ubuntu 16.10 toolchain)
 ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
@@ -190,18 +190,18 @@ UPROGS=\
 	_zombie\
 
 ZUPROGS=\
+	z_zcat\
+	z_zecho\
 	z_zkill\
 	z_zworld\
 	z_zzombie\
-	z_zcat\
-	z_zecho\
 
 ZUBINS=\
+	zcat\
+	zecho\
 	zkill\
 	zworld\
 	zzombie\
-	zcat\
-	zecho\
 
 fs.img: mkfs README $(UPROGS) $(ZUPROGS)
 	./mkfs fs.img README $(UPROGS) $(ZUBINS)
